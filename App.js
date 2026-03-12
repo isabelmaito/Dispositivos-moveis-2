@@ -1,63 +1,89 @@
-import { useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { Button, StyleSheet, Text, View, ActivityIndicator , TextInput} from 'react-native';
+import React, { useState } from 'react';
+import { View, ScrollView } from 'react-native';
+import { TextInput, Button, ActivityIndicator, Text } from 'react-native-paper';
+import { styles } from './src/components/BuscaCepStyle';
+import BuscaCep from './src/components/BuscaCep';
 
 export default function App() {
-    const [ cep, setCep ] = useState([]);
-    const [loading, setLoading] = useState(false);
+  const [cepDigitado, setCepDigitado] = useState('');
+  const [loading, setLoading] = useState(false);
+    
+  const [endereco, setEndereco] = useState({
+    logradouro: '',
+    bairro: '',
+    localidade: '',
+    estado: '',
+    numero: '',
+    complemento: ''
+  });
 
+  const BuscaCep = async () => {
+    if (cepDigitado.length < 8) return; // Evita buscar CEP incompleto
 
-// API FETCH
-  const BuscaCep= async(x)=>{
     setLoading(true);
-    let url = `https://viacep.com.br/ws/${x}/json/`
-    console.log(`Acessando ${url}`)
-    await fetch(url)
-    .then(resp => resp.json())
-    .then(data =>{
-      console.log(data)
-      setCep(data);
-      //navegando os elementos(indice)
-      //console.log("-" + ce.bairro)
-    })
-    .catch(error => console.log("tipo" + error));
+    let url = `https://viacep.com.br/ws/${cepDigitado}/json/`;
+    console.log(`Acessando ${url}`);
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      console.log(data);
+      
+      if (!data.erro) {
+        setEndereco({
+          ...endereco, // Mantém o que já tem (como o número que não vem da API)
+          logradouro: data.logradouro,
+          bairro: data.bairro,
+          localidade: data.localidade,
+          estado: data.uf, 
+          complemento: data.complemento,
+        });
+      }
+    } catch (error) {
+      console.log("Erro: " + error);
+    }
 
     setLoading(false);
-  }
+  };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text variant="titleLarge" style={styles.titulo}>Buscador de CEP</Text>
+
+      {/* Campo para digitar o CEP */}
+      <TextInput
+        label="Digite o CEP"
+        value={cepDigitado}
+        onChangeText={setCepDigitado}
+        keyboardType="numeric"
+        maxLength={8}
+        mode="outlined"
+        style={styles.input}
+      />
+
       <Button 
-      title='CEP'
-      onPress={()=> BuscaCep('06803180')}>
+        mode="contained" 
+        onPress={BuscaCep} 
+        disabled={loading}
+        style={styles.botao}
+      >
+        Busca CEP
       </Button>
 
-      <TextInput
-        value= {cep.logradouro}
-        onChangeText= { text => setCep({...cep, logradouro: text})}
-        style= {{ height: 40, width:200, borderColor: 'gray', borderWidth: 1}}
-        />
+      {/* Ícone de carregamento */}
+      {loading && <ActivityIndicator size="large" style={styles.loading} />}
 
-      { loading && <ActivityIndicator size="large" color="blue" />}
-
-      {cep != null &&(
-        <View>
-        <Text>Rua: {cep.logradouro}</Text>
-        <Text>Bairro: {cep.bairro}</Text>
-        <Text>CIdade: {cep.localidade}</Text>
-        <Text>Estado: {cep.estado}</Text>
+      {/* Campos de resultado exibidos como inputs */}
+      {!loading && (
+        <View style={styles.formResultados}>
+          <TextInput label="Logradouro" value={endereco.logradouro} mode="outlined" style={styles.input} onChangeText={t => setEndereco({...endereco, logradouro: t})} />
+          <TextInput label="Bairro" value={endereco.bairro} mode="outlined" style={styles.input} onChangeText={t => setEndereco({...endereco, bairro: t})} />
+          <TextInput label="Cidade" value={endereco.localidade} mode="outlined" style={styles.input} onChangeText={t => setEndereco({...endereco, localidade: t})} />
+          <TextInput label="Estado" value={endereco.estado} mode="outlined" style={styles.input} onChangeText={t => setEndereco({...endereco, estado: t})} />
+          <TextInput label="Número" value={endereco.numero} mode="outlined" style={styles.input} keyboardType="numeric" onChangeText={t => setEndereco({...endereco, numero: t})} />
+          <TextInput label="Complemento" value={endereco.complemento} mode="outlined" style={styles.input} onChangeText={t => setEndereco({...endereco, complemento: t})} />
         </View>
       )}
-
-    </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
