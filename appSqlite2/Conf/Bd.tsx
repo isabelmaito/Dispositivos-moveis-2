@@ -42,7 +42,7 @@ async function createTable(x: SQLite.SQLiteDatabase) {
         `);
         console.log('Tabela CRIADA!!!');
         
-        // Adiciona as colunas se elas não existirem (migração)
+        // Adiciona as colunas se elas não existirem (para migração)
         await migrarTabela(x);
     } catch (error) {
         console.log('Erro ao Criar tabela', error);
