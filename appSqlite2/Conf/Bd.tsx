@@ -7,12 +7,14 @@ export type Usuario = {
     EMAIL_US: string;
     CEP_US: string;
     LOGRADOURO_US: string;
+    NUMERO_US: string;
+    COMPLEMENTO_US: string;
     BAIRRO_US: string;
     CIDADE_US: string;
     ESTADO_US: string;
 };
 
-//--- função de criar e abrir o banco de dados
+// Função de criar e abrir o banco de dados
 
 async function Banco() {
     const bd = await SQLite.openDatabaseAsync("FatecV2");
@@ -20,7 +22,7 @@ async function Banco() {
     return bd;
 }
 
-// criar a tabela
+// Criar a tabela
 async function createTable(x: SQLite.SQLiteDatabase) {
     try {
         await x.execAsync(`
@@ -31,18 +33,50 @@ async function createTable(x: SQLite.SQLiteDatabase) {
                 EMAIL_US VARCHAR(100),
                 CEP_US VARCHAR(10),
                 LOGRADOURO_US VARCHAR(200),
+                NUMERO_US VARCHAR(20),
+                COMPLEMENTO_US VARCHAR(200),
                 BAIRRO_US VARCHAR(100),
                 CIDADE_US VARCHAR(100),
                 ESTADO_US VARCHAR(2)
             )
         `);
         console.log('Tabela CRIADA!!!');
+        
+        // Adiciona as colunas se elas não existirem (migração)
+        await migrarTabela(x);
     } catch (error) {
         console.log('Erro ao Criar tabela', error);
     }
 }
 
-//-------- Inserir dados
+// Migração para adicionar colunas faltantes
+async function migrarTabela(x: SQLite.SQLiteDatabase) {
+    try {
+        // Tenta adicionar coluna NUMERO_US
+        try {
+            await x.execAsync(`ALTER TABLE USUARIO ADD COLUMN NUMERO_US VARCHAR(20) DEFAULT ''`);
+            console.log('Coluna NUMERO_US adicionada');
+        } catch (e: any) {
+            if (e.message && e.message.includes('duplicate column name')) {
+                console.log('Coluna NUMERO_US já existe');
+            }
+        }
+
+        // Tenta adicionar coluna COMPLEMENTO_US
+        try {
+            await x.execAsync(`ALTER TABLE USUARIO ADD COLUMN COMPLEMENTO_US VARCHAR(200) DEFAULT ''`);
+            console.log('Coluna COMPLEMENTO_US adicionada');
+        } catch (e: any) {
+            if (e.message && e.message.includes('duplicate column name')) {
+                console.log('Coluna COMPLEMENTO_US já existe');
+            }
+        }
+    } catch (error) {
+        console.log('Erro na migração:', error);
+    }
+}
+
+// Inserir dados
 
 async function inserirUsuario(
     db: SQLite.SQLiteDatabase,
@@ -50,23 +84,25 @@ async function inserirUsuario(
     email: string,
     cep: string,
     logradouro: string,
+    numero: string,
+    complemento: string,
     bairro: string,
     cidade: string,
     estado: string
 ) {
     try {
         await db.runAsync(
-            `INSERT INTO USUARIO(NOME_US, EMAIL_US, CEP_US, LOGRADOURO_US, BAIRRO_US, CIDADE_US, ESTADO_US)
-             VALUES(?, ?, ?, ?, ?, ?, ?)`,
-            nome, email, cep, logradouro, bairro, cidade, estado
+            `INSERT INTO USUARIO(NOME_US, EMAIL_US, CEP_US, LOGRADOURO_US, NUMERO_US, COMPLEMENTO_US, BAIRRO_US, CIDADE_US, ESTADO_US)
+             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            nome, email, cep, logradouro, numero, complemento, bairro, cidade, estado
         );
-        console.log('Usuário Inserido !!!');
+        console.log('Usuário Inserido !!!');  
     } catch (error) {
         console.log('Erro ao inserir usuário', error);
     }
 }
 
-// exibir os dados
+// Exibir os dados
 
 async function selectUsuarios(db: SQLite.SQLiteDatabase): Promise<Usuario[]> {
     try {
@@ -88,6 +124,32 @@ async function selectUsuarioId(db: SQLite.SQLiteDatabase, id: number) {
         return resultado as Usuario;
     } catch (error) {
         console.log("Erro ", error);
+    }
+}
+
+// ATUALIZAR
+
+async function atualizarUsuario(
+    db: SQLite.SQLiteDatabase,
+    id: number,
+    nome: string,
+    email: string,
+    cep: string,
+    logradouro: string,
+    numero: string,
+    complemento: string,
+    bairro: string,
+    cidade: string,
+    estado: string
+) {
+    try {
+        await db.runAsync(
+            `UPDATE USUARIO SET NOME_US = ?, EMAIL_US = ?, CEP_US = ?, LOGRADOURO_US = ?, NUMERO_US = ?, COMPLEMENTO_US = ?, BAIRRO_US = ?, CIDADE_US = ?, ESTADO_US = ? WHERE ID_US = ?`,
+            nome, email, cep, logradouro, numero, complemento, bairro, cidade, estado, id
+        );
+        console.log('Usuário Atualizado !!!');
+    } catch (error) {
+        console.log('Erro ao atualizar usuário', error);
     }
 }
 
@@ -127,4 +189,4 @@ async function buscarCep(cep: string) {
     }
 }
 
-export { Banco, createTable, inserirUsuario, selectUsuarios, selectUsuarioId, deletaUsuario, buscarCep };
+export { Banco, createTable, inserirUsuario, selectUsuarios, selectUsuarioId, atualizarUsuario, deletaUsuario, buscarCep };
