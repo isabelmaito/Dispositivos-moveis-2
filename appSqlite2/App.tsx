@@ -4,7 +4,7 @@ import {
   Modal, Alert, ActivityIndicator, KeyboardAvoidingView,
   Platform, ScrollView, useWindowDimensions,
 } from 'react-native';
-import { Banco, createTable, inserirUsuario, selectUsuarios, deletaUsuario, buscarCep } from './Conf/Bd';
+import { Banco, createTable, inserirUsuario, selectUsuarios, atualizarUsuario, deletaUsuario, buscarCep } from './Conf/Bd';
 import type { Usuario } from './Conf/Bd';
 import { useEffect, useState, useCallback } from 'react';
 import type { SQLiteDatabase } from 'expo-sqlite';
@@ -19,6 +19,8 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [cep, setCep] = useState('');
   const [logradouro, setLogradouro] = useState('');
+  const [numero, setNumero] = useState('');
+  const [complemento, setComplemento] = useState('');
   const [bairro, setBairro] = useState('');
   const [cidade, setCidade] = useState('');
   const [estado, setEstado] = useState('');
@@ -26,6 +28,17 @@ export default function App() {
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [modalVisivel, setModalVisivel] = useState(false);
   const [idParaDeletar, setIdParaDeletar] = useState<number | null>(null);
+  const [modalEdicaoVisivel, setModalEdicaoVisivel] = useState(false);
+  const [idParaEditar, setIdParaEditar] = useState<number | null>(null);
+  const [editNome, setEditNome] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editCep, setEditCep] = useState('');
+  const [editLogradouro, setEditLogradouro] = useState('');
+  const [editNumero, setEditNumero] = useState('');
+  const [editComplemento, setEditComplemento] = useState('');
+  const [editBairro, setEditBairro] = useState('');
+  const [editCidade, setEditCidade] = useState('');
+  const [editEstado, setEditEstado] = useState('');
 
   // Inicializa o banco
   useEffect(() => {
@@ -34,18 +47,31 @@ export default function App() {
       await createTable(rbd);
       setDb(rbd);
       const lista = await selectUsuarios(rbd);
+      console.log('Usuários iniciais:', lista);
       setUsuarios(lista);
     })();
   }, []);
 
+  // Recarrega usuários quando o db muda
+  useEffect(() => {
+    if (db) {
+      carregarUsuarios();
+    }
+  }, [db, carregarUsuarios]);
+
   // Carrega usuários
   const carregarUsuarios = useCallback(async () => {
     if (!db) return;
-    const lista = await selectUsuarios(db);
-    setUsuarios(lista);
+    try {
+      const lista = await selectUsuarios(db);
+      console.log('Usuários carregados:', lista);
+      setUsuarios(lista);
+    } catch (error) {
+      console.log('Erro ao carregar usuários:', error);
+    }
   }, [db]);
 
-  // Busca CEP automaticamente quando tem 8 dígitos
+  // Busca CEP automaticamente 
   const handleCepChange = async (texto: string) => {
     const apenasNumeros = texto.replace(/\D/g, '');
     setCep(apenasNumeros);
@@ -69,6 +95,8 @@ export default function App() {
       }
     } else {
       setLogradouro('');
+      setNumero('');
+      setComplemento('');
       setBairro('');
       setCidade('');
       setEstado('');
@@ -82,16 +110,30 @@ export default function App() {
       Alert.alert('Atenção', 'Preencha nome, email e CEP.');
       return;
     }
-    await inserirUsuario(db, nome, email, cep, logradouro, bairro, cidade, estado);
-    Alert.alert('Sucesso', 'Usuário cadastrado!');
-    setNome('');
-    setEmail('');
-    setCep('');
-    setLogradouro('');
-    setBairro('');
-    setCidade('');
-    setEstado('');
-    await carregarUsuarios();
+    try {
+      await inserirUsuario(db, nome, email, cep, logradouro, numero, complemento, bairro, cidade, estado);
+      console.log('Usuário inserido com sucesso');
+      
+      // Limpa o formulário
+      setNome('');
+      setEmail('');
+      setCep('');
+      setLogradouro('');
+      setNumero('');
+      setComplemento('');
+      setBairro('');
+      setCidade('');
+      setEstado('');
+      
+      // Aguarda um pouco e recarrega a lista
+      setTimeout(async () => {
+        await carregarUsuarios();
+        Alert.alert('Sucesso', 'Usuário cadastrado!');
+      }, 300);
+    } catch (error) {
+      console.log('Erro ao cadastrar:', error);
+      Alert.alert('Erro', 'Erro ao cadastrar usuário.');
+    }
   };
 
   // Abre o modal de confirmação
@@ -103,16 +145,72 @@ export default function App() {
   // Confirma e executa a exclusão
   const confirmarExclusao = async () => {
     if (!db || idParaDeletar === null) return;
-    await deletaUsuario(db, idParaDeletar);
-    setModalVisivel(false);
-    setIdParaDeletar(null);
-    await carregarUsuarios();
+    try {
+      await deletaUsuario(db, idParaDeletar);
+      console.log('Usuário deletado com sucesso');
+      setModalVisivel(false);
+      setIdParaDeletar(null);
+      
+      // Aguarda um pouco e recarrega a lista
+      setTimeout(async () => {
+        await carregarUsuarios();
+        Alert.alert('Sucesso', 'Usuário deletado!');
+      }, 300);
+    } catch (error) {
+      console.log('Erro ao deletar:', error);
+      Alert.alert('Erro', 'Erro ao deletar usuário.');
+    }
   };
 
   // Cancela e fecha o modal
   const cancelarExclusao = () => {
     setModalVisivel(false);
     setIdParaDeletar(null);
+  };
+
+  // Abre o modal de edição
+  const handleEditar = (usuario: Usuario) => {
+    setIdParaEditar(usuario.ID_US);
+    setEditNome(usuario.NOME_US);
+    setEditEmail(usuario.EMAIL_US);
+    setEditCep(usuario.CEP_US);
+    setEditLogradouro(usuario.LOGRADOURO_US);
+    setEditNumero(usuario.NUMERO_US);
+    setEditComplemento(usuario.COMPLEMENTO_US);
+    setEditBairro(usuario.BAIRRO_US);
+    setEditCidade(usuario.CIDADE_US);
+    setEditEstado(usuario.ESTADO_US);
+    setModalEdicaoVisivel(true);
+  };
+
+  // Salva a edição
+  const handleSalvarEdicao = async () => {
+    if (!db || idParaEditar === null) return;
+    if (!editNome.trim() || !editEmail.trim() || !editCep.trim()) {
+      Alert.alert('Atenção', 'Preencha nome, email e CEP.');
+      return;
+    }
+    try {
+      await atualizarUsuario(db, idParaEditar, editNome, editEmail, editCep, editLogradouro, editNumero, editComplemento, editBairro, editCidade, editEstado);
+      console.log('Usuário atualizado com sucesso');
+      setModalEdicaoVisivel(false);
+      setIdParaEditar(null);
+      
+      // Aguarda um pouco e recarrega a lista
+      setTimeout(async () => {
+        await carregarUsuarios();
+        Alert.alert('Sucesso', 'Usuário atualizado!');
+      }, 300);
+    } catch (error) {
+      console.log('Erro ao atualizar:', error);
+      Alert.alert('Erro', 'Erro ao atualizar usuário.');
+    }
+  };
+
+  // Cancela edição
+  const cancelarEdicao = () => {
+    setModalEdicaoVisivel(false);
+    setIdParaEditar(null);
   };
 
   const renderUsuario = ({ item }: { item: Usuario }) => (
@@ -122,15 +220,20 @@ export default function App() {
         <Text style={styles.cardNome}>{item.NOME_US}</Text>
         <Text style={styles.cardTexto}>{item.EMAIL_US}</Text>
         <Text style={styles.cardTexto}>
-          {item.LOGRADOURO_US}{item.BAIRRO_US ? `, ${item.BAIRRO_US}` : ''}
+          {item.LOGRADOURO_US}{item.NUMERO_US ? `, ${item.NUMERO_US}` : ''}{item.COMPLEMENTO_US ? ` (${item.COMPLEMENTO_US})` : ''}
         </Text>
         <Text style={styles.cardTexto}>
-          {item.CIDADE_US}{item.ESTADO_US ? ` - ${item.ESTADO_US}` : ''} | CEP: {item.CEP_US}
+          {item.BAIRRO_US ? `${item.BAIRRO_US}, ` : ''}{item.CIDADE_US}{item.ESTADO_US ? ` - ${item.ESTADO_US}` : ''} | CEP: {item.CEP_US}
         </Text>
       </View>
-      <TouchableOpacity style={styles.btnDeletar} onPress={() => handleDeletar(item.ID_US)}>
-        <Text style={styles.btnDeletarTexto}>✕</Text>
-      </TouchableOpacity>
+      <View style={styles.cardButtons}>
+        <TouchableOpacity style={styles.btnEditar} onPress={() => handleEditar(item)}>
+          <Text style={styles.btnEditarTexto}>✏️</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.btnDeletar} onPress={() => handleDeletar(item.ID_US)}>
+          <Text style={styles.btnDeletarTexto}>✕</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -165,6 +268,128 @@ export default function App() {
                 <Text style={styles.btnConfirmarExcluirTexto}>Excluir</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de edição */}
+      <Modal
+        visible={modalEdicaoVisivel}
+        transparent
+        animationType="slide"
+        onRequestClose={cancelarEdicao}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalEditBox}>
+            <ScrollView>
+              <Text style={styles.modalEditTitulo}>Editar Usuário</Text>
+
+              <Text style={styles.label}>Nome</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Nome"
+                placeholderTextColor="#9CA3AF"
+                value={editNome}
+                onChangeText={setEditNome}
+              />
+
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="#9CA3AF"
+                value={editEmail}
+                onChangeText={setEditEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+
+              <Text style={styles.label}>CEP</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="CEP"
+                placeholderTextColor="#9CA3AF"
+                value={editCep}
+                onChangeText={setEditCep}
+                keyboardType="numeric"
+                maxLength={8}
+              />
+
+              <Text style={styles.label}>Logradouro</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Logradouro"
+                placeholderTextColor="#9CA3AF"
+                value={editLogradouro}
+                onChangeText={setEditLogradouro}
+              />
+
+              <View style={styles.rowContainer}>
+                <View style={styles.halfInput}>
+                  <Text style={styles.label}>Número</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Número"
+                    placeholderTextColor="#9CA3AF"
+                    value={editNumero}
+                    onChangeText={setEditNumero}
+                    keyboardType="numeric"
+                  />
+                </View>
+                <View style={styles.halfInput}>
+                  <Text style={styles.label}>Complemento</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Complemento"
+                    placeholderTextColor="#9CA3AF"
+                    value={editComplemento}
+                    onChangeText={setEditComplemento}
+                  />
+                </View>
+              </View>
+
+              <Text style={styles.label}>Bairro</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Bairro"
+                placeholderTextColor="#9CA3AF"
+                value={editBairro}
+                onChangeText={setEditBairro}
+              />
+
+              <View style={styles.rowContainer}>
+                <View style={styles.halfInput}>
+                  <Text style={styles.label}>Cidade</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Cidade"
+                    placeholderTextColor="#9CA3AF"
+                    value={editCidade}
+                    onChangeText={setEditCidade}
+                  />
+                </View>
+                <View style={styles.halfInput}>
+                  <Text style={styles.label}>Estado</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="UF"
+                    placeholderTextColor="#9CA3AF"
+                    value={editEstado}
+                    onChangeText={setEditEstado}
+                    maxLength={2}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.modalEditBotoes}>
+                <TouchableOpacity style={styles.btnCancelar} onPress={cancelarEdicao}>
+                  <Text style={styles.btnCancelarTexto}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.btnSalvarEdicao} onPress={handleSalvarEdicao}>
+                  <Text style={styles.btnSalvarEdicaoTexto}>Salvar</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -220,9 +445,73 @@ export default function App() {
 
             {logradouro !== '' && (
               <View style={styles.enderecoBox}>
-                <Text style={styles.enderecoTitulo}>📍 Endereço encontrado</Text>
-                <Text style={styles.enderecoTexto}>{logradouro}{bairro ? `, ${bairro}` : ''}</Text>
-                <Text style={styles.enderecoTexto}>{cidade}{estado ? ` — ${estado}` : ''}</Text>
+                <Text style={styles.enderecoTitulo}>📍 Endereço encontrado (edite se necessário)</Text>
+
+                <Text style={styles.label}>Logradouro</Text>
+                <TextInput
+                  style={styles.input}
+                  value={logradouro}
+                  onChangeText={setLogradouro}
+                  placeholder="Logradouro"
+                  placeholderTextColor="#9CA3AF"
+                />
+
+                <View style={styles.rowContainer}>
+                  <View style={styles.halfInput}>
+                    <Text style={styles.label}>Número</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={numero}
+                      onChangeText={setNumero}
+                      placeholder="Número"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="numeric"
+                    />
+                  </View>
+                  <View style={styles.halfInput}>
+                    <Text style={styles.label}>Complemento</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={complemento}
+                      onChangeText={setComplemento}
+                      placeholder="Apto, sala, etc"
+                      placeholderTextColor="#9CA3AF"
+                    />
+                  </View>
+                </View>
+
+                <Text style={styles.label}>Bairro</Text>
+                <TextInput
+                  style={styles.input}
+                  value={bairro}
+                  onChangeText={setBairro}
+                  placeholder="Bairro"
+                  placeholderTextColor="#9CA3AF"
+                />
+
+                <View style={styles.rowContainer}>
+                  <View style={styles.halfInput}>
+                    <Text style={styles.label}>Cidade</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={cidade}
+                      onChangeText={setCidade}
+                      placeholder="Cidade"
+                      placeholderTextColor="#9CA3AF"
+                    />
+                  </View>
+                  <View style={styles.halfInput}>
+                    <Text style={styles.label}>Estado</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={estado}
+                      onChangeText={setEstado}
+                      placeholder="UF"
+                      placeholderTextColor="#9CA3AF"
+                      maxLength={2}
+                    />
+                  </View>
+                </View>
               </View>
             )}
 
@@ -350,6 +639,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
+  // ── Container lado a lado ─────────────────────────────────────
+  rowContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 0,
+  },
+  halfInput: {
+    flex: 1,
+  },
+
   // ── Box endereço ──────────────────────────────────────────────
   enderecoBox: {
     backgroundColor: '#EDE9FE', // lavanda claro
@@ -363,7 +662,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 13,
     color: '#5B21B6',
-    marginBottom: 6,
+    marginBottom: 12,
   },
   enderecoTexto: {
     color: '#374151',
@@ -456,6 +755,25 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
+  // ── Botões do Card ────────────────────────────────────────────
+  cardButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    marginLeft: 10,
+  },
+  btnEditar: {
+    backgroundColor: '#EDE9FE',
+    borderRadius: 20,
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnEditarTexto: {
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+
   // ── Botão Deletar ─────────────────────────────────────────────
   btnDeletar: {
     backgroundColor: '#EDE9FE',
@@ -464,7 +782,6 @@ const styles = StyleSheet.create({
     height: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 10,
   },
   btnDeletarTexto: {
     color: '#7C3AED',
@@ -544,6 +861,49 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   btnConfirmarExcluirTexto: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  // ── Modal de edição ───────────────────────────────────────────
+  modalEditBox: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 28,
+    width: '100%',
+    maxHeight: '85%',
+    marginTop: 'auto',
+    marginBottom: 0,
+    shadowColor: '#4C1D95',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  modalEditTitulo: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#5B21B6',
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EDE9FE',
+    paddingBottom: 12,
+  },
+  modalEditBotoes: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  btnSalvarEdicao: {
+    flex: 1,
+    backgroundColor: '#7C3AED',
+    borderRadius: 8,
+    paddingVertical: 11,
+    alignItems: 'center',
+  },
+  btnSalvarEdicaoTexto: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
