@@ -544,15 +544,16 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  // ── Layout principal ──────────────────────────────────────────
+  
+  // Layout principal 
   container: {
     flex: 1,
-    backgroundColor: '#F5F3FF', // lavanda suave
+    backgroundColor: '#F5F3FF', 
   },
 
-  // ── Header ───────────────────────────────────────────────────
+  // Header 
   header: {
-    backgroundColor: '#5B21B6', // violeta escuro
+    backgroundColor: '#5B21B6', 
     paddingTop: Platform.OS === 'web' ? 24 : 50,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -573,12 +574,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   headerSub: {
-    color: '#DDD6FE', // lilás claro
+    color: '#DDD6FE', 
     fontSize: 13,
     marginTop: 4,
   },
 
-  // ── Scroll ────────────────────────────────────────────────────
+  // Scroll View
   scroll: {
     flex: 1,
   },
@@ -591,14 +592,14 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 
-  // ── Formulário ────────────────────────────────────────────────
+  // Formulário 
   form: {
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 18,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#EDE9FE', // violeta muito claro
+    borderColor: '#EDE9FE', 
     shadowColor: '#7C3AED',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -617,18 +618,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#374151', // cinza escuro / quase preto
+    color: '#374151', 
     marginBottom: 5,
     marginTop: 12,
   },
   input: {
     borderWidth: 1.5,
-    borderColor: '#C4B5FD', // lilás médio
+    borderColor: '#C4B5FD', 
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 9,
     fontSize: 14,
-    color: '#111827', // preto suave
+    color: '#111827', 
     backgroundColor: '#FAFAFF',
   },
   cepRow: {
@@ -639,7 +640,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // ── Container lado a lado ─────────────────────────────────────
+  // Container lado a lado 
   rowContainer: {
     flexDirection: 'row',
     gap: 12,
@@ -649,14 +650,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // ── Box endereço ──────────────────────────────────────────────
+  // Box endereço 
   enderecoBox: {
-    backgroundColor: '#EDE9FE', // lavanda claro
+    backgroundColor: '#EDE9FE', 
     borderRadius: 8,
     padding: 12,
     marginTop: 12,
     borderLeftWidth: 3,
-    borderLeftColor: '#7C3AED', // roxo
+    borderLeftColor: '#7C3AED', 
   },
   enderecoTitulo: {
     fontWeight: '700',
@@ -670,9 +671,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  // ── Botão Cadastrar ───────────────────────────────────────────
+  // Botão Cadastrar 
   btnCadastrar: {
-    backgroundColor: '#7C3AED', // roxo principal
+    backgroundColor: '#7C3AED', 
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
@@ -685,7 +686,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // ── Lista ─────────────────────────────────────────────────────
+  // Lista
   listaHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -695,7 +696,7 @@ const styles = StyleSheet.create({
   listaTitulo: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F1F1F', // preto
+    color: '#1F1F1F', 
   },
   badge: {
     backgroundColor: '#7C3AED',
@@ -716,7 +717,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 
-  // ── Cards ─────────────────────────────────────────────────────
+  // Cards
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
@@ -736,7 +737,7 @@ const styles = StyleSheet.create({
   cardAcento: {
     width: 4,
     alignSelf: 'stretch',
-    backgroundColor: '#A78BFA', // lilás médio
+    backgroundColor: '#A78BFA', 
     borderRadius: 4,
     marginRight: 12,
   },
@@ -755,7 +756,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // ── Botões do Card ────────────────────────────────────────────
+  // Botões do Card
   cardButtons: {
     flexDirection: 'row',
     gap: 8,
@@ -774,7 +775,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  // ── Botão Deletar ─────────────────────────────────────────────
+  // Botão Deletar
   btnDeletar: {
     backgroundColor: '#EDE9FE',
     borderRadius: 20,
@@ -789,7 +790,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  // ── Modal de confirmação ──────────────────────────────────────
+  // Modal de confirmação 
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(30, 0, 60, 0.45)',
@@ -866,7 +867,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // ── Modal de edição ───────────────────────────────────────────
+  // Modal de edição
   modalEditBox: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
