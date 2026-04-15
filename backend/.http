@@ -8,3 +8,14 @@ Content-Type: application/json
 {
     "name": "Isabel"
 }
+
+### PUT
+PUT http://localhost:3000/1
+Content-Type: application/json
+
+{
+    "name": "valor"
+}
+
+### DELETE
+DELETE http://localhost:3000/1
