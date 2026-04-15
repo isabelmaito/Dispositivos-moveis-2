@@ -11,7 +11,20 @@ app.get('/',(req, res) => {
 
 //post
 app.post('/add',(req, res) => {
-    res.send('Comando de Adicionar');
+    // let i = req.body.name,
+    res.send(`Comando de Adicionar ${i}`);
+})
+
+//put
+app.put('/:id', (req, res) => {
+    let i = req.params.id;
+    res.send(`Comando de Atualizar ${i}`);
+})
+
+//delete
+app.delete('/:id', (req, res) => {
+    let i = req.params.id;
+    res.send(`Comando de Deletar ${i}`);
 })
 
 //iniciar o srvidor
