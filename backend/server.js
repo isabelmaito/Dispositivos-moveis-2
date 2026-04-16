@@ -45,8 +45,10 @@ app.put('/:id', (req, res) => {
 })
 
 //delete
-app.delete('/:id', (req, res) => {
+app.delete('/:id', async (req, res) => {
     let i = req.params.id;
+    // comando do mongoo
+    await Usuario.deleteOne({_id: i});
     res.send(`Comando de Deletar ${i}`);
 })
 
