@@ -17,5 +17,5 @@ Content-Type: application/json
     "name": "valor"
 }
 
-### DELETE
-DELETE http://localhost:3000/1
+### DELETE - adicionar após a barra o id para ser deletado
+DELETE http://localhost:3000/69e032bb60b9094dbc0c7445
