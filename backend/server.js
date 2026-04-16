@@ -26,8 +26,10 @@ const Usuario = mongoose.model('Usuario', mongoose.Schema({
 let app = express();
 
 //get
-app.get('/',(req, res) => {
-    res.send('Comando de Exibir');
+app.get('/', async (req, res) => {
+    // fazer consulta no mongodb para exibir os documentos(registro)
+    const documentos = await Usuario.find({}); 
+    res.json(documentos);
 })
 
 //post
