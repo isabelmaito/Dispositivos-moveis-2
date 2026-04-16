@@ -1,4 +1,25 @@
 let express = require('express');
+const mongoose = require('mongoose');
+
+// caminho do mongoo
+let url = 'mongodb://localhost:27017/DSM_2026';
+
+mongoose.connect(url)
+.then(
+    () => {
+        console.log('Conexão com o MongoDB estabelecida com Sucesso')}
+    ).catch(
+        (err) => {
+            console.log(err)
+        }   
+)
+
+// estrutura coleção, documento(agregado)
+const Usuario = mongoose.model('Usuario', mongoose.Schema({
+    name: String
+}));
+
+
 
 //referencia
 
