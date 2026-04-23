@@ -1,4 +1,5 @@
-import { Button, StyleSheet, View } from "react-native";
+import { StatusBar } from 'expo-status-bar';
+import { Button, StyleSheet, View, Text } from "react-native";
 
 export default function App() {
   const url = "http://192.168.50.209:3000";
