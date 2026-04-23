@@ -1,49 +1,53 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import { Button } from 'react-native';
-
+import { Button, StyleSheet, View } from "react-native";
 
 export default function App() {
-  let url = 'http://localhost:3000/';
-  //simular get
-  const Find=() => {
+  const url = "http://192.168.50.209:3000";
+  const find = () => {
     fetch(url)
-    .then(res => res.json())
-    .then(json => console.log(json))
-    .catch(erro => { console.log(erro)})
+      .then((res) => res.json())
+      .then((json) => console.log(json))
+      .catch((e) => {
+        console.log(e);
+      });
+  };
 
-    //adicionar usuário
-const insertOne=()=> {
-  fetch(url + 'add', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body:JSON.stringify({name: 'Maria'}),
-  })
-}
+  const addUser = () => {
+    fetch(url + "/add", {
+      method: "POST",
+      body: JSON.stringify({
+        name: "Isabel Maito",
+      }),
+      headers: {
+        "Content-Type": "application/json; charset = UTF-8",
+      },
+    })
+      .then((res) => res.json())
+      .then((json) => console.log(json))
+      .catch((e) => console.log(e));
+  };
+  const deleteUser = (id) => {
+    fetch(`${url}/${id}`, {
+      method: "DELETE",
+    })
+      .then((res) => res.json())
+      .then((json) => console.log(json))
+      .catch((e) => console.log(e));
+  };
 
-const deleteOne=(x)=> {
-  fetch(`${url}/${x}`, {
-    method: 'DELETE',
-  })
-}
-
-return (
-  <View style={styles.container}>
-    <Button
-      title='insertOne()'
-      onPress={() => insertOne()}
-    />
-  </View>
-);
+  return (
+    <View style={styles.container}>
+      <Button onPress={() => find()} title="Press me to get" />
+      <Button onPress={() => addUser()} title="Press me to add" />
+      <Button onPress={() => deleteUser("")} title="Press me to delete" />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
