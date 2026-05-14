@@ -1,25 +1,25 @@
-import * as SQLite from 'expo-sqlite';
+import * as SQLite from "expo-sqlite"
 
-// Tipo do usuário
+// Tipo do usuário (ID pode ser number para SQLite local ou string para MongoDB via API)
 export type Usuario = {
-    ID_US: number;
-    NOME_US: string;
-    EMAIL_US: string;
-    CEP_US: string;
-    LOGRADOURO_US: string;
-    NUMERO_US: string;
-    COMPLEMENTO_US: string;
-    BAIRRO_US: string;
-    CIDADE_US: string;
-    ESTADO_US: string;
-};
+    ID_US: number | string
+    NOME_US: string
+    EMAIL_US: string
+    CEP_US: string
+    LOGRADOURO_US: string
+    NUMERO_US: string
+    COMPLEMENTO_US: string
+    BAIRRO_US: string
+    CIDADE_US: string
+    ESTADO_US: string
+}
 
 // Função de criar e abrir o banco de dados
 
 async function Banco() {
-    const bd = await SQLite.openDatabaseAsync("FatecV2");
-    console.log('Banco CRIADO !!!');
-    return bd;
+    const bd = await SQLite.openDatabaseAsync("FatecV2")
+    console.log("Banco CRIADO!!")
+    return bd
 }
 
 // Criar a tabela
@@ -39,13 +39,13 @@ async function createTable(x: SQLite.SQLiteDatabase) {
                 CIDADE_US VARCHAR(100),
                 ESTADO_US VARCHAR(2)
             )
-        `);
-        console.log('Tabela CRIADA!!!');
-        
+        `)
+        console.log("Tabela CRIADA!!!")
+
         // Adiciona as colunas se elas não existirem (para migração)
-        await migrarTabela(x);
+        await migrarTabela(x)
     } catch (error) {
-        console.log('Erro ao Criar tabela', error);
+        console.log("Erro ao Criar tabela", error)
     }
 }
 
@@ -54,25 +54,29 @@ async function migrarTabela(x: SQLite.SQLiteDatabase) {
     try {
         // Tenta adicionar coluna NUMERO_US
         try {
-            await x.execAsync(`ALTER TABLE USUARIO ADD COLUMN NUMERO_US VARCHAR(20) DEFAULT ''`);
-            console.log('Coluna NUMERO_US adicionada');
+            await x.execAsync(
+                `ALTER TABLE USUARIO ADD COLUMN NUMERO_US VARCHAR(20) DEFAULT ''`,
+            )
+            console.log("Coluna NUMERO_US adicionada")
         } catch (e: any) {
-            if (e.message && e.message.includes('duplicate column name')) {
-                console.log('Coluna NUMERO_US já existe');
+            if (e.message && e.message.includes("duplicate column name")) {
+                console.log("Coluna NUMERO_US já existe")
             }
         }
 
         // Tenta adicionar coluna COMPLEMENTO_US
         try {
-            await x.execAsync(`ALTER TABLE USUARIO ADD COLUMN COMPLEMENTO_US VARCHAR(200) DEFAULT ''`);
-            console.log('Coluna COMPLEMENTO_US adicionada');
+            await x.execAsync(
+                `ALTER TABLE USUARIO ADD COLUMN COMPLEMENTO_US VARCHAR(200) DEFAULT ''`,
+            )
+            console.log("Coluna COMPLEMENTO_US adicionada")
         } catch (e: any) {
-            if (e.message && e.message.includes('duplicate column name')) {
-                console.log('Coluna COMPLEMENTO_US já existe');
+            if (e.message && e.message.includes("duplicate column name")) {
+                console.log("Coluna COMPLEMENTO_US já existe")
             }
         }
     } catch (error) {
-        console.log('Erro na migração:', error);
+        console.log("Erro na migração:", error)
     }
 }
 
@@ -88,17 +92,26 @@ async function inserirUsuario(
     complemento: string,
     bairro: string,
     cidade: string,
-    estado: string
+    estado: string,
 ) {
     try {
         await db.runAsync(
             `INSERT INTO USUARIO(NOME_US, EMAIL_US, CEP_US, LOGRADOURO_US, NUMERO_US, COMPLEMENTO_US, BAIRRO_US, CIDADE_US, ESTADO_US)
              VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            nome, email, cep, logradouro, numero, complemento, bairro, cidade, estado
-        );
-        console.log('Usuário Inserido !!!');  
+            nome,
+            email,
+            cep,
+            logradouro,
+            numero,
+            complemento,
+            bairro,
+            cidade,
+            estado,
+        )
+        console.log("Usuário Inserido !!!")
     } catch (error) {
-        console.log('Erro ao inserir usuário', error);
+        console.log("Erro ao inserir usuário", error)
+        throw error
     }
 }
 
@@ -106,12 +119,12 @@ async function inserirUsuario(
 
 async function selectUsuarios(db: SQLite.SQLiteDatabase): Promise<Usuario[]> {
     try {
-        const resultado = await db.getAllAsync(" SELECT * FROM USUARIO ");
-        console.log('Usuários encontrados !!!');
-        return resultado as Usuario[];
+        const resultado = await db.getAllAsync(" SELECT * FROM USUARIO ")
+        console.log("Usuários encontrados !!!")
+        return resultado as Usuario[]
     } catch (error) {
-        console.log("Erro ao exibir usuários", error);
-        return [];
+        console.log("Erro ao exibir usuários", error)
+        throw error
     }
 }
 
@@ -119,11 +132,14 @@ async function selectUsuarios(db: SQLite.SQLiteDatabase): Promise<Usuario[]> {
 
 async function selectUsuarioId(db: SQLite.SQLiteDatabase, id: number) {
     try {
-        const resultado = await db.getFirstAsync(" SELECT * FROM USUARIO WHERE ID_US = ?", id);
-        console.log('Usuário encontrado!!');
-        return resultado as Usuario;
+        const resultado = await db.getFirstAsync(
+            " SELECT * FROM USUARIO WHERE ID_US = ?",
+            id,
+        )
+        console.log("Usuário encontrado!!")
+        return resultado as Usuario
     } catch (error) {
-        console.log("Erro ", error);
+        console.log("Erro ", error)
     }
 }
 
@@ -140,16 +156,25 @@ async function atualizarUsuario(
     complemento: string,
     bairro: string,
     cidade: string,
-    estado: string
+    estado: string,
 ) {
     try {
         await db.runAsync(
             `UPDATE USUARIO SET NOME_US = ?, EMAIL_US = ?, CEP_US = ?, LOGRADOURO_US = ?, NUMERO_US = ?, COMPLEMENTO_US = ?, BAIRRO_US = ?, CIDADE_US = ?, ESTADO_US = ? WHERE ID_US = ?`,
-            nome, email, cep, logradouro, numero, complemento, bairro, cidade, estado, id
-        );
-        console.log('Usuário Atualizado !!!');
+            nome,
+            email,
+            cep,
+            logradouro,
+            numero,
+            complemento,
+            bairro,
+            cidade,
+            estado,
+            id,
+        )
+        console.log("Usuário Atualizado !!!")
     } catch (error) {
-        console.log('Erro ao atualizar usuário', error);
+        console.log("Erro ao atualizar usuário", error)
     }
 }
 
@@ -157,36 +182,47 @@ async function atualizarUsuario(
 
 async function deletaUsuario(db: SQLite.SQLiteDatabase, id: number) {
     try {
-        await db.runAsync(" DELETE FROM USUARIO WHERE ID_US = ?", id);
-        console.log('Deletado com sucesso');
+        await db.runAsync(" DELETE FROM USUARIO WHERE ID_US = ?", id)
+        console.log("Deletado com sucesso")
     } catch (error) {
-        console.log('Erro ao deletar', error);
+        console.log("Erro ao deletar", error)
     }
 }
 
 // BUSCAR CEP via API ViaCEP
 
 async function buscarCep(cep: string) {
-    const cepLimpo = cep.replace(/\D/g, '');
+    const cepLimpo = cep.replace(/\D/g, "")
     if (cepLimpo.length !== 8) {
-        return null;
+        return null
     }
     try {
-        const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
-        const data = await response.json();
+        const response = await fetch(
+            `https://viacep.com.br/ws/${cepLimpo}/json/`,
+        )
+        const data = await response.json()
         if (data.erro) {
-            return null;
+            return null
         }
         return {
-            logradouro: data.logradouro || '',
-            bairro: data.bairro || '',
-            cidade: data.localidade || '',
-            estado: data.uf || '',
-        };
+            logradouro: data.logradouro || "",
+            bairro: data.bairro || "",
+            cidade: data.localidade || "",
+            estado: data.uf || "",
+        }
     } catch (error) {
-        console.log('Erro ao buscar CEP', error);
-        return null;
+        console.log("Erro ao buscar CEP", error)
+        return null
     }
 }
 
-export { Banco, createTable, inserirUsuario, selectUsuarios, selectUsuarioId, atualizarUsuario, deletaUsuario, buscarCep };
+export {
+    Banco,
+    createTable,
+    inserirUsuario,
+    selectUsuarios,
+    selectUsuarioId,
+    atualizarUsuario,
+    deletaUsuario,
+    buscarCep,
+}
