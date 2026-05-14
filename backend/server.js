@@ -1,79 +1,59 @@
-let express = require('express');
-const mongoose = require('mongoose');
-let bodyParser = require('body-parser');
-let methodOvirride = require('method-override');
-let cors = require('cors');
+require("dotenv").config()
+const express = require("express")
+const mongoose = require("mongoose")
+const bodyParser = require("body-parser")
+const cors = require("cors")
 
-let app = express();
+const usuariosRouter = require("./routes/usuarios")
+const cepRouter = require("./routes/cep")
 
-//Vincule middlewares
-app.use(cors());
+const app = express()
+const PORT = process.env.PORT || 3000
+const DB_TYPE = (process.env.DB_TYPE || "mongodb").toLowerCase()
+const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/DSM_2026"
 
-// Permite que você use verbos HTTP
-app.use(methodOvirride('X-HTTP-Method'));
-app.use(methodOvirride('X-HTTP-Method-Override'));
-app.use(methodOvirride('X-Method-Override'));
-app.use(methodOvirride('_method'));
+// ─── Middlewares ──────────────────────────────────────────────────────────────
+app.use(cors())
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
 
-app.use((req, resp, next) => {
-    resp.header("Access-Control-Allow-Origin", "*");
-    resp.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next()
+// ─── MongoDB ──────────────────────────────────────────────────────────────────
+// Tenta conectar sempre para permitir troca dinâmica de banco pelo cliente.
+mongoose
+    .connect(MONGO_URL)
+    .then(() => console.log(`MongoDB conectado: ${MONGO_URL}`))
+    .catch((err) =>
+        console.warn(
+            `MongoDB indisponivel (modo SQLite continua funcional): ${err.message}`,
+        ),
+    )
+
+// ─── Rotas ────────────────────────────────────────────────────────────────────
+app.use("/usuarios", usuariosRouter)
+app.use("/cep", cepRouter)
+
+// Status / documentação inline
+app.get("/", (_req, res) => {
+    res.json({
+        mensagem: "API CRUD + ViaCEP operacional",
+        bancoPadrao: DB_TYPE,
+        mongo:
+            mongoose.connection.readyState === 1 ? "conectado" : "desconectado",
+        dica: "Adicione ?db=sqlite ou ?db=mongodb em qualquer rota para escolher o banco",
+        endpoints: {
+            "GET    /usuarios": "Listar todos os usuários",
+            "GET    /usuarios/:id": "Buscar usuário por ID",
+            "POST   /usuarios":
+                "Criar usuário { nome, email, cep, logradouro, numero, complemento, bairro, cidade, estado }",
+            "PUT    /usuarios/:id": "Atualizar usuário",
+            "DELETE /usuarios/:id": "Deletar usuário",
+            "GET    /cep/:cep": "Consultar endereço pelo CEP (ViaCEP)",
+        },
+    })
 })
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// caminho do mongoo
-let url = 'mongodb://localhost:27017/DSM_2026';
-
-mongoose.connect(url)
-.then(
-    () => {
-        console.log('Conexão com o MongoDB estabelecida com Sucesso')}
-    ).catch(
-        (err) => {
-            console.log(err)
-        }   
-)
-
-// estrutura coleção, documento(agregado)
-const Usuario = mongoose.model('Usuario', mongoose.Schema({
-    name: String
-}));
-
-
-//get
-app.get('/', async (req, res) => {
-    // fazer consulta no mongodb para exibir os documentos(registro)
-    const documentos = await Usuario.find({}); 
-    res.json(documentos);
+// ─── Start ────────────────────────────────────────────────────────────────────
+app.listen(PORT, () => {
+    console.log(`Servidor rodando em http://localhost:${PORT}`)
+    console.log(`Banco padrao: ${DB_TYPE.toUpperCase()}`)
 })
-
-//post
-app.post('/add', async (req, res) => {
-    let nome = req.body.name;
-    const rec = new Usuario({name: nome});
-    rec.save();
-    res.json({'status' : 'Adicionado' });    
-})
-
-//put
-app.put('/:id', (req, res) => {
-    let i = req.params.id;
-    res.send(`Comando de Atualizar ${i}`);
-})
-
-//delete
-app.delete('/:id', async (req, res) => {
-    let id = req.params.id;
-    await Usuario.deleteOne({_id: i});
-    res.send(`Comando de Deletar ${i}`);
-})
-
-//iniciar o srvidor
-app.listen( 3000, () => {
-    console.log('Executando o Servidor')
-});
-
-
