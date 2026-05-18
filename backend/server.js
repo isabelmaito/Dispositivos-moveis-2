@@ -12,12 +12,12 @@ const PORT = process.env.PORT || 3000
 const DB_TYPE = (process.env.DB_TYPE || "mongodb").toLowerCase()
 const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/DSM_2026"
 
-// ─── Middlewares ──────────────────────────────────────────────────────────────
+// Middlewares 
 app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
-// ─── MongoDB ──────────────────────────────────────────────────────────────────
+// MongoDB
 // Tenta conectar sempre para permitir troca dinâmica de banco pelo cliente.
 mongoose
     .connect(MONGO_URL)
@@ -28,11 +28,11 @@ mongoose
         ),
     )
 
-// ─── Rotas ────────────────────────────────────────────────────────────────────
+// Rotas
 app.use("/usuarios", usuariosRouter)
 app.use("/cep", cepRouter)
 
-// Status / documentação inline
+// Status - documentação inline
 app.get("/", (_req, res) => {
     res.json({
         mensagem: "API CRUD + ViaCEP operacional",
@@ -52,7 +52,7 @@ app.get("/", (_req, res) => {
     })
 })
 
-// ─── Start ────────────────────────────────────────────────────────────────────
+// Start 
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`)
     console.log(`Banco padrao: ${DB_TYPE.toUpperCase()}`)
